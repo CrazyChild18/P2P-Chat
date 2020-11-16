@@ -68,7 +68,7 @@ public class Server extends JFrame {
 		try {
 			// 创建一个服务器socket，绑定端口8000
 			ServerSocket serverSocket = new ServerSocket(8080);
-
+			
 			// 打印启动时间
 			jta.append("Server startup time: " + new Date() + "\n\n");
 
@@ -120,7 +120,7 @@ public class Server extends JFrame {
 						System.err.println(ex);
 					}
 				}
-
+				
 				// 该socket作为参数，为当前连接用户创建一个线程，用于监听该socket的数据
 				HandleAClient task = new HandleAClient(socket);
 				new Thread(task).start();
