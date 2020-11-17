@@ -18,34 +18,31 @@ import net.sf.json.JSONObject;
 /**
  * @author Eric Li
  * 
- * 客户端
- * 通过注册类启动
- * JFrame实现窗口化界面
- * 实现聊天和接受服务器消息
- * 
- * 引入JSON包来实现数据在不同类之间的传输
+ * client
+ * Start by registering the class
+ * JFrame implements a windowed interface
+ * Implement chat and receive server messages
+ * JSON packages are introduced to enable the transfer of data between classes
  */
 public class Client extends JFrame {
  
-	// 接受消息框
+	//Accept message box
 	private JTextField sendMessage = new JTextField();
-	// 显示信息框
+	//Display information box
 	private JTextArea showMessage = new JTextArea();
-	// 显示用户列表
+	//Display user list
 	private JTextArea userlist = new JTextArea(10, 10);
-	// IO
+	//IO
 	private DataOutputStream message_to_Server;
 	private DataInputStream message_from_Server;
-	// 客户端用户名
+	//cs-username
 	private String username = null;
-	// 用户列表
+	//users list
 	private ArrayList<String> list = new ArrayList<>();
 	private boolean isKick = false;
 
 	/**
-	 * 客户端构造函数，绘画界面
-	 * 
-	 * @param username: 传入用户名
+	 * Client constructor, drawing interface
 	 */
 	public Client(String username) {
  
@@ -55,7 +52,7 @@ public class Client extends JFrame {
 		showMessage.setFont(new Font("", Font.BOLD, 18));
 		userlist.setFont(new Font("", 0, 18));
  
-		// 设置输入框
+		//Set input box
 		JPanel p = new JPanel();
 		p.setLayout(new BorderLayout());
 		JLabel jLabel = new JLabel("Add (username-) before message to private chat. Press ENTER to send", JLabel.CENTER);
@@ -65,126 +62,123 @@ public class Client extends JFrame {
 		sendMessage.setHorizontalAlignment(JTextField.LEFT);
 		this.add(p, BorderLayout.SOUTH);
  
-		// 在版面的中间增加一个聊天信息显示框
-		showMessage.add(new JScrollPane());	//让聊天记录栏带有滚动条
+		//Add a chat message display box in the middle of the page
+		showMessage.add(new JScrollPane());	//scroll bar
 		this.add(new JScrollPane(showMessage), BorderLayout.CENTER);
-		showMessage.setEditable(false); //不可编辑
+		showMessage.setEditable(false); //not editable
  
-		// 用户列表
+		//user list
 		final JPanel p2 = new JPanel();
 		p2.setLayout(new BorderLayout());
 		p2.setBorder(new TitledBorder("Online User"));
 		p2.add(new JScrollPane(userlist), BorderLayout.CENTER);
-		userlist.setEditable(false); //不可编辑
+		userlist.setEditable(false); //not editable
 		
 		this.add(p2, BorderLayout.WEST);
 		this.setTitle("Client: " + username);
 		this.setSize(800, 500);
 		
-		int windowWidth = this.getWidth(); //获得窗口宽
-        int windowHeight = this.getHeight();//获得窗口高
-        Toolkit kit = Toolkit.getDefaultToolkit(); //定义工具包
-        Dimension screenSize = kit.getScreenSize(); //获取屏幕的尺寸
-        int screenWidth = screenSize.width; //获取屏幕的宽
-        int screenHeight = screenSize.height; //获取屏幕的高
-        //固定将界面居中
+		int windowWidth = this.getWidth(); //Get window width
+        int windowHeight = this.getHeight();//Get window height
+        Toolkit kit = Toolkit.getDefaultToolkit(); //Definition toolkit
+        Dimension screenSize = kit.getScreenSize(); //Gets the screen size
+        int screenWidth = screenSize.width; //Gets the width of the screen
+        int screenHeight = screenSize.height; //Gets the height of the screen
+        //Fix and center the interface
         this.setLocation(screenWidth/2-windowWidth/2, screenHeight/2-windowHeight/2);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
  
-		// 监听输入框事件
+		//Listen for input box events
 		sendMessage.addActionListener(new ButtonListener());
 		
 		setVisible(true);
  
-		// 将消息打包成json数据格式
+		//Package the message into a JSON data format
 		JSONObject data = new JSONObject();
 		data.put("username", username);
 		data.put("msg", null);
  
 		try {
-			//创建一个socket连接服务器
+			//Create a socket connection server
 			Socket socket = new Socket(InetAddress.getLocalHost(), 8080);
  
-			//获取服务器的数据
+			//Get data from the server
 			message_from_Server = new DataInputStream(socket.getInputStream());
  
-			//向服务器发送数据
+			//Send data to the server
 			message_to_Server = new DataOutputStream(socket.getOutputStream());
  
-			//向服务器发送 用户名
+			//Send the user name to the server
 			message_to_Server.writeUTF(data.toString());
  
-			//开启一个线程，用于读取服务器发送过来的数据
+			//Start a thread to read data sent from the server
 			ReadThread readThread = new ReadThread();
 			readThread.start();
  
 		} catch (IOException ex) {
-			//出现异常，连接服务器失败
+			//An exception occurred and the connection to the server failed
 			showMessage.append("No response from server");
 		}
 	}
  
-	// 监听输入框消息事件类
+	//Listen for the input box message event class
 	private class ButtonListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			try {
-				//首先判断是否被踢出
+				//Determine if you are kicked out
 				if (isKick) {
 					showMessage.append("You've been kicked out\n");
 				} else {
-					// 设置日期格式
-					SimpleDateFormat data = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");// 设置日期格式
+					//Set the date format
+					SimpleDateFormat data = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 					String time = data.format(new Date()).toString();
  
-					// 获取输入框信息
+					//Gets input box information
 					String msg = sendMessage.getText().trim();
  
-					//进行消息处理
+					//Do message processing
 					if (msg.equals("")) {
-						//提示发送消息不能为空给
+						//Prompt sending message cannot be null given
 						JOptionPane.showMessageDialog(null, "The message can't be null", "Warning!!!", JOptionPane.ERROR_MESSAGE);
 					}else if (msg.equals("STOP")) {
-						//提示发送消息不能为STOP，防止触发服务器异常退出
+						//The message cannot be sent for STOP to prevent triggering the server to exit with an exception
 						JOptionPane.showMessageDialog(null, "The message can't be STOP", "Warning!!!", JOptionPane.ERROR_MESSAGE);
 					}else if(msg.equals("EXIT")) {
-						// 打包数据成json格式
+						//Package the data into JSON format
 						JSONObject data_send = new JSONObject();
 						data_send.put("username", username);
 						data_send.put("msg", msg);
 						data_send.put("time", time);
-						// 无用户名，将isPrivChat设置空值
+						//Useless account name, set isPrivChat to null
 						data_send.put("isPrivChat", "");
-						// 向服务器发送数据
+						//Send data to server
 						message_to_Server.writeUTF(data_send.toString());
 						System.exit(EXIT_ON_CLOSE);
 					}else {
-						//将消息拆分为聊天内容和用户名
+						//Split the message into the chat content and the user name
 						String[] msg1 = msg.split("-");
-						//区分群聊或者私聊
+						//Distinguish between group chats and private chats
 						if(msg1.length == 2) {
-							//打包数据成json格式
+							//Package the data into JSON format
 							JSONObject data_send = new JSONObject();
 							data_send.put("username", username);
 							data_send.put("msg", msg1[1]);
 							data_send.put("time", time);
-							// 私聊，将isPrivChat设置成用户名
+							//Private chat, set isPrivChat to the user name
 							data_send.put("isPrivChat", msg1[0]);
-							// 向服务器发送数据
+							//Send data to server
 							message_to_Server.writeUTF(data_send.toString());
 						}else {
-							// 打包数据成json格式
 							JSONObject data_send = new JSONObject();
 							data_send.put("username", username);
 							data_send.put("msg", msg1[0]);
 							data_send.put("time", time);
-							// 无用户名，将isPrivChat设置空值
+							//Useless account name, set isPrivChat to null
 							data_send.put("isPrivChat", "");
-							// 向服务器发送数据
 							message_to_Server.writeUTF(data_send.toString());
 						}
 					}
 				}
-				//重置输入框为空
 				sendMessage.setText("");
 			} catch (Exception ex) {
 				System.err.println(ex);
@@ -192,46 +186,49 @@ public class Client extends JFrame {
 		}
 	}
 	
-	// 读取服务器发来消息的线程类
+	/** 
+	 * @author Eric Li
+	 *
+	 * Read the thread class from the server
+	 */
 	public class ReadThread extends Thread {
  
 		public void run() {
 			String json = null;
 			try {
-				// 无线循环监听服务器发来的数据
+				//The wireless loop listens for data sent from the server
 				while (true) {
-					// 读取服务器的数据
+					//Read the data from the server
 					json = message_from_Server.readUTF();
-					// 转化成json格式
 					JSONObject data = JSONObject.fromObject(json.toString());
  
 					if (json != null) {
 						String mString = data.getString("msg");
  
-						// 是否被踢出群聊
+						//Whether been kicked out of a group chat
 						if (mString.contains("been kicked out") && mString.contains(username)) {
 							isKick = true;
 							showMessage.append(username + ",You've been kicked out\n"
 									+ "Client will be close in 5s");
-							Thread.sleep(5000);//单位：毫秒
+							Thread.sleep(5000); //Wait for 5 seconds
 							System.exit(EXIT_ON_CLOSE);
 						}else {
-							// 打印聊天信息或者系统提示信息
+							//Print chat messages or system prompts
 							showMessage.append(mString + "\n\n");
  
-							// 强制使光标移动最底部
+							//Force the cursor to move to the bottom
 							showMessage.selectAll();
 
-							// 刷新用户列表
+							//Refresh the user list
 							list.clear();
 							JSONArray jsonArray = data.getJSONArray("userlist");
  
-							// 获取用户列表
+							//Getting a list of users
 							for (int i = 0; i < jsonArray.size(); i++) {
 								list.add(jsonArray.get(i).toString());
 							}
  
-							// 打印用户列表
+							//Print user list
 							userlist.setText("User count: " + jsonArray.size() + " \n");
 							for (int i = 0; i < list.size(); i++) {
 								userlist.append(list.get(i) + "\n");

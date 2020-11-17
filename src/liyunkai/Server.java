@@ -10,25 +10,32 @@ import javax.swing.*;
 import net.sf.json.JSONObject;
 
 /**
- * 服务器类，继承JFrame，实现窗口化界面
+ * @author Eric Li
+ * 
+ * The server class inherits the JFrame and implements the windowed interface
+ * Responsible for receiving and distributing messages to the server
+ * 
+ * {@code}ArrayList<User>: Use list to store users
+ * {@code}DataOutputStream: output stream
+ * {@code}DataInputStream: input stream
  */
 public class Server extends JFrame {
 
-	// 在线用户列表
+	//List of online users
 	ArrayList<User> clientList = new ArrayList<User>();
-	// 在线用户名列表
+	//List of online user names
 	ArrayList<String> usernamelist = new ArrayList<String>();
-	// 创建一个信息显示框
+	//Information display box
 	private JTextArea jta = new JTextArea();
-	// 用于要踢除用户名的输入框
+	//Used to kick out the input field of the user name
 	private JTextField kick_username_input = new JTextField();
-	// 踢除用户名
+	//Kick out the user name
 	private String username_kick = null;
-	// 声明一个用户对象，该类里面有两个变量 socket，username；
+	//User object, which has two variables socket and username
 	private User user = null;
-	// 声明一个输出流
+	//Declare an output stream
 	DataOutputStream output = null;
-	// 声明一个输入流
+	//Declare an input stream
 	DataInputStream input = null;
 
 	public static void main(String[] args) {
@@ -36,17 +43,19 @@ public class Server extends JFrame {
 	}
 
 	/**
-	 * 服务器构造方法,绘画图形界面,监听socket连接
+	 * Server construction method
+	 * drawing graphical interface
+	 * listening socket connection
 	 */
 	public Server() {
-		// 设置信息显示框版面
+		//Set the information display box layout
 		setLayout(new BorderLayout());
 		add(new JScrollPane(jta), BorderLayout.CENTER);
 		jta.setEditable(false);
 		jta.setFont(new Font("", 0, 18));
 
-		// 设置要踢除用户的输入框
-		kick_username_input.setFont(new Font("", 0, 18));
+		//Set input box
+		kick_username_input.setFont(new Font("", 0, 17));
 
 		final JPanel p = new JPanel();
 		p.setLayout(new BorderLayout());
@@ -66,62 +75,63 @@ public class Server extends JFrame {
 		setVisible(true); //
 
 		try {
-			// 创建一个服务器socket，绑定端口8000
+			//Create a server socket, bind port 8000
 			ServerSocket serverSocket = new ServerSocket(8080);
 			
-			// 打印启动时间
+			//Print startup time
 			jta.append("Server startup time: " + new Date() + "\n\n");
 
-			// 无限循环监听是否有新的客户端连接
+			//Infinite loop listens for new client connections
 			while (true) {
 
-				// 监听一个新的连接
+				//Listen for a new connection
 				Socket socket = serverSocket.accept();
 
-				// 当有client连接时
+				//When there is client connected
 				if (socket != null) {
 
-					// 获取用户信息
+					//get user info
 					input = new DataInputStream(socket.getInputStream());
 					String json = input.readUTF();
 					JSONObject data = JSONObject.fromObject(json.toString());
-					jta.append("Client:" + data.getString("username") + " at:" + new Date() + "login");
+					jta.append("Client: " + data.getString("username") + " at:" + new Date() + " login");
 
-					// 显示用户ip
+					//Display user IP
 					InetAddress inetAddress = socket.getInetAddress();
 					jta.append(", IP address is：" + inetAddress.getHostAddress() + "\n\n");
 
-					// 新建一个用户对象,设置socket，用户名
+					//Create a new user object, set socket, user name
 					user = new User();
 					user.setSocket(socket);
 					user.setUserName(data.getString("username"));
 
-					// 加入在线用户组列表
+					//Join the list of online user groups
 					clientList.add(user);
 
-					// 加入用户名列表（用户显示在客户端的用户列表）
+					//Add user name list (users are displayed in the client user list)
 					usernamelist.add(data.getString("username"));
 				}
 
-				// 用户上线提示，打包成json格式数据
+				//When users are prompted to go online, package the data into JSON format
 				JSONObject online = new JSONObject();
 				online.put("userlist", usernamelist);
 				online.put("msg", user.getUserName() + " logged in");
 
-				// 提示所有用户有新的用户上线
+				//Prompt all users to have new users online
 				for (int i = 0; i < clientList.size(); i++) {
 					try {
 						User user = clientList.get(i);
-						// 获取每一个用户的socket，得到输出流，
+						//Get each user socket, get the output stream
 						output = new DataOutputStream(user.getSocket().getOutputStream());
-						// 向每个用户端发送数据
+						//Send data to each client
 						output.writeUTF(online.toString());
 					} catch (IOException ex) {
 						System.err.println(ex);
 					}
 				}
 				
-				// 该socket作为参数，为当前连接用户创建一个线程，用于监听该socket的数据
+				//Socket as a parameter
+				//Create a thread for the current connected user to listen for the socket's data
 				HandleAClient task = new HandleAClient(socket);
 				new Thread(task).start();
 			}
@@ -132,10 +142,12 @@ public class Server extends JFrame {
 
 	
 	/**
-	 * 自定义用户线程类, 判断是否私聊, 提示用户下线
+	 * Custom user thread class
+	 * determine whether private chat
+	 * prompt the user to log off
 	 */
 	class HandleAClient implements Runnable {
-		// 已连接的cocket
+		//Connected sockets
 		private Socket socket;
 
 		public HandleAClient(Socket socket) {
@@ -145,18 +157,18 @@ public class Server extends JFrame {
 		public void run() {
 
 			try {
-				// 获取本线程监听的socket客户端的输入流
+				//Gets the input stream from the socket client that this thread is listening to
 				DataInputStream inputFromClient = new DataInputStream(socket.getInputStream());
 
-				// 循环监听
+				//Cycle to monitor
 				while (true) {
 
-					// 获取客户端的数据
+					//Get the client data
 					String json = inputFromClient.readUTF();
 					JSONObject data = JSONObject.fromObject(json.toString());
 
-					//检测客户端消息是否为EXIT
-					//若为EXIT则执行offLine函数
+					//Detects whether the client message is EXIT
+					//If is EXIT, the offLine function is executed
 					if(data.getString("msg").equals("EXIT")) {
 						for(int j = 0; j < clientList.size(); j++) {
 							if (clientList.get(j).getUserName().equals(data.getString("username"))) {
@@ -165,33 +177,32 @@ public class Server extends JFrame {
 						}
 					}
 					
-					// 私聊标记变量
+					// marks for private chat
 					boolean isPrivate = false;
 
-					// 判断是否私聊
+					// Private chat, the acquired data forward to the designated user
 					for (int i = 0; i < clientList.size(); i++) {
-						// 私聊，将获取的数据转发给指定用户
-						// 通过用户名比较找私聊用户
+						//Find a private chat user by comparing user names
 						if (clientList.get(i).getUserName().equals(data.getString("isPrivChat"))) {
 
-							// 处理聊天内容，这是私聊内容
+							//Handling chat content
 							String msg = data.getString("username") + " send private to you," + data.getString("time") + ":\n"+ data.getString("msg");
 
-							// 将消息打包成json格式数据发给指定客户端
+							//Packages the message into JSON format and sends the data to the specified client
 							packMsg(data, i, msg);
 							i++;
 
-							// 标记私聊，结束此次消息发送过程
+							//Mark the private chat to end the message sending process
 							isPrivate = true;
 							break;
 						}
 					}
 
-					//群聊
-					//将获取的数据转发给每一个用户
+					//group chat
+					//Forward the acquired data to each user
 					if (isPrivate == false) {
 						for (int i = 0; i < clientList.size();) {
-							// 将聊天的信息和用户列表打包成json格式数据发给每个客户端
+							//The chat information and user list are packaged into JSON format and sent to each client
 							String msg = data.getString("username") + " " + data.getString("time") + ":\n" + data.getString("msg");
 							packMsg(data, i, msg);
 							i++;
@@ -204,40 +215,41 @@ public class Server extends JFrame {
 			}
 		}
 
-		// 将聊天的信息和用户列表打包成json格式数据发给一个客户端
+		//The chat information and user list are packaged into JSON format and sent to a client
 		public void packMsg(JSONObject data, int i, String msg) {
-			// 打包数据
+			//packing data 
 			JSONObject chatMessage = new JSONObject();
 			chatMessage.put("userlist", usernamelist);
 			chatMessage.put("msg", msg);
 
-			// 获取一个用户
+			//Get a user
 			User user = clientList.get(i);
 
-			//向获取用户发送消息
+			//Send a message to the fetch user
 			try {
 				output = new DataOutputStream(user.getSocket().getOutputStream());
 				output.writeUTF(chatMessage.toString());
 			} catch (IOException e) {
-				
+				//Prevents the client from shutting down directly rather than quitting using instructions
+				offLine(i);
 			}
 
 		}
 
-		// 提示用户下线
+		//Prompt log off
 		public void offLine(int i) {
 			User outuser = clientList.get(i);
 
-			// 从列表中移除
+			//Removed from the list
 			clientList.remove(i);
 			usernamelist.remove(outuser.getUserName());
 
-			// 打包下线的发送消息
+			//Package the outgoing message that goes offline
 			JSONObject out = new JSONObject();
 			out.put("userlist", usernamelist);
 			out.put("msg", outuser.getUserName() + " exit\n");
 
-			// 提示每个用户有用户下线了
+			//Prompt each user to log off
 			for (int j = 0; j < clientList.size(); j++) {
 				try {
 					User user = clientList.get(j);
@@ -251,27 +263,27 @@ public class Server extends JFrame {
 	
 
 	/**
-	 * 监听输入框
-	 * 	服务器下线 STOP
-	 * 	踢除指定用户
+	 * Monitor input box
+	 * 	The server goes offline (STOP)
+	 * 	Kicks out the specified user
 	 */
 	private class ButtonListener implements ActionListener {
 		
 		public void actionPerformed(ActionEvent e) {
 			try {
-				// 获取用户名
+				//Get UserName
 				username_kick = kick_username_input.getText().trim();
 
 				boolean isUsernameOut = false;
 				if (username_kick != null) {
-					//服务器下线
+					//Server offline
 					if(username_kick.equals("STOP")) {
 							// 打包被踢出的发送消息
 							JSONObject out = new JSONObject();
 							out.put("userlist", usernamelist);
 							out.put("msg", "The server has been stop\n");
 	
-							//循环userlist来通知每一个客户端服务器将要退出
+							//Loop the UserList to notify each client server that it is quitting
 							for (int j = 0; j < clientList.size(); j++) {
 								try {
 									User user = clientList.get(j);
@@ -280,23 +292,23 @@ public class Server extends JFrame {
 								} catch (IOException ex1) {
 								}
 							}
-							//通过系统强制关闭server程序
+							//Force the server program to shut down through the system
 							System.exit(EXIT_ON_CLOSE);
 							return;
 					}else {
-						//踢出用户
+						//kick User
 						for (int i = 0; i < clientList.size(); i++) {
 							if (clientList.get(i).getUserName().equals(username_kick)) {
 								
-								//得到提出用户的信息
+								//Get the user's information
 								User kick_user = clientList.get(i);
 	
-								// 打包被踢出的发送消息
+								//Package the send message that is kicked out
 								JSONObject out = new JSONObject();
 								out.put("userlist", usernamelist);
 								out.put("msg", kick_user.getUserName() + " been kicked out\n");
 	
-								// 提示每个用户有用户被踢出了
+								//Prompt each user that a user has been kicked out
 								for (int j = 0; j < clientList.size(); j++) {
 									try {
 										User user = clientList.get(j);
@@ -306,7 +318,7 @@ public class Server extends JFrame {
 									}
 								}
 	
-								// 从列表中移除
+								//Removed from the list
 								clientList.remove(i);
 								usernamelist.remove(kick_user.getUserName());
 	
@@ -315,7 +327,7 @@ public class Server extends JFrame {
 							}
 	
 						}
-						//未找到用户
+						//User not found
 						if (isUsernameOut == false) {
 							jta.append("Not found user: " + username_kick + "\n");
 						}

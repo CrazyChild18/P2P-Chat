@@ -22,12 +22,11 @@ import javax.swing.JTextField;
 /**
  * @author Eric Li
  * 
- * 用户输入用户名并注册
- * 通过启动这个程序进入客户端
- * @param username: 用户名，不能为空并且不能为STOP
- * 基于JFrame实现图形界面
+ * The user enters the user name and registers
+ * Enter the client by launching this program
+ * @param username: User name, cannot be empty and cannot be STOP or EXIT
+ * Implement graphical interface based on JFrame
  */
-
 public class Regist extends JFrame {
  
 	public static void main(String[] args) {
@@ -37,19 +36,18 @@ public class Regist extends JFrame {
 	public Regist() {
 		
 		/**
-		 * 界面
-		 * 
-		 * 使用Borderlayout布局
-		 * @param name_input: 注册界面的输入框，用于接收用户的输入
-		 * @param hint_text: 提示用户进行输入的文本框
+		 * interface
+		 * Use the Borderlayout layout
+		 * @param name_input: An input box on the registration interface for receiving user input
+		 * @param hint_text: A text box that prompts the user for input
 		 */
 		
-		//用户名输入框
+		//User name input box
 		JTextField name_input = new JTextField(1);
 		name_input.setFont(new Font("", Font.BOLD, 20)); 
-		name_input.setHorizontalAlignment(JTextField.CENTER); //输入从中间
+		name_input.setHorizontalAlignment(JTextField.CENTER); //Input from the middle
 
-		//提示
+		//hint
 		JLabel hint_text = new JLabel("Enter username (press ENTER to login)", JLabel.CENTER);
 		hint_text.setFont(new Font("", Font.BOLD, 17));
 		
@@ -57,7 +55,7 @@ public class Regist extends JFrame {
 		JLabel hint_blank1 = new JLabel();
 		Icon icon = new ImageIcon("res/logo.jpg");
 		hint_blank1.setIcon(icon);
-		hint_blank1.setVerticalTextPosition(JLabel.BOTTOM); //和下面的一起将图片放置于框的正中间
+		hint_blank1.setVerticalTextPosition(JLabel.BOTTOM); //Place the picture in the middle of the box with the one below
 		hint_blank1.setHorizontalTextPosition(JLabel.CENTER);
 		hint_blank1.setText("Click picture to know about author");
 		hint_blank1.addMouseListener(new MouseListener() {
@@ -67,7 +65,6 @@ public class Regist extends JFrame {
 			}
 			
 			@Override
-			//添加鼠标长按图片事件
 			public void mousePressed(MouseEvent e) {
 			}
 			
@@ -80,7 +77,7 @@ public class Regist extends JFrame {
 			}
 			
 			@Override
-			//添加鼠标点击图片事件
+			//Add a mouse-click image event
 			public void mouseClicked(MouseEvent e) {
 				JOptionPane.showMessageDialog(null, "@Author: Li Yunkai\n"
 						+ "@Email: 2049721941@qq.com\n"
@@ -92,43 +89,42 @@ public class Regist extends JFrame {
 			}
 		});
 		
-		//整体窗口
 		JPanel p1 = new JPanel();
 		p1.setLayout(new BorderLayout());
-		p1.add(hint_text, BorderLayout.CENTER); //将提示框放置在中间
-		p1.add(name_input, BorderLayout.SOUTH); //将输入框放置在最下面
+		p1.add(hint_text, BorderLayout.CENTER); //Place the prompt box in the middle
+		p1.add(name_input, BorderLayout.SOUTH); //Place the input field at the bottom
 		p1.add(hint_blank1, BorderLayout.WEST);
 		
 		this.add(p1, BorderLayout.CENTER);
-		this.setTitle("Welcome to login"); //标题
-		this.setSize(600, 300); //尺寸
+		this.setTitle("Welcome to login"); //Title
+		this.setSize(600, 300); //Size
 		
-		int windowWidth = this.getWidth(); //获得窗口宽
-        int windowHeight = this.getHeight();//获得窗口高
-        Toolkit kit = Toolkit.getDefaultToolkit(); //定义工具包
-        Dimension screenSize = kit.getScreenSize(); //获取屏幕的尺寸
-        int screenWidth = screenSize.width; //获取屏幕的宽
-        int screenHeight = screenSize.height; //获取屏幕的高
-        //固定将界面居中
+		int windowWidth = this.getWidth(); //Get window width
+        int windowHeight = this.getHeight();//Get window height
+        Toolkit kit = Toolkit.getDefaultToolkit(); //Definition toolkit
+        Dimension screenSize = kit.getScreenSize(); //Gets the screen size
+        int screenWidth = screenSize.width; //Gets the width of the screen
+        int screenHeight = screenSize.height; //Gets the height of the screen
+        //Fix and center the interface
         this.setLocation(screenWidth/2-windowWidth/2, screenHeight/2-windowHeight/2);
         
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); //关闭按钮
-		//设置窗口大小不可变
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		//Set the window size to be immutable
         this.setResizable(false);
         this.setVisible(true);
  
-		// 回车登陆
+		// "Enter" to login
 		name_input.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
-				// 获取用户名
+				//Get UserName
 				String username = name_input.getText().trim();
  
 				if (username.equals("")) {
-					//用户名不能为空
+					//The user name cannot be empty
 					JOptionPane.showMessageDialog(null, "The username can't be null", "Warning!!!", JOptionPane.ERROR_MESSAGE);
 				} else {
-					// 关闭设置页面，启动聊天框页面
+					//Close the Settings page and launch the chat box page
 					setVisible(false);
 					new Client(username);
 				}
