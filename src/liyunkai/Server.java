@@ -71,7 +71,6 @@ public class Server extends JFrame {
 		setTitle("Server");
 		setSize(700, 400);
 		setLocation(200, 300);
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setVisible(true); //
 
 		try {
@@ -166,49 +165,66 @@ public class Server extends JFrame {
 					//Get the client data
 					String json = inputFromClient.readUTF();
 					JSONObject data = JSONObject.fromObject(json.toString());
-
+										
 					//Detects whether the client message is EXIT
 					//If is EXIT, the offLine function is executed
 					if(data.getString("msg").equals("EXIT")) {
-						for(int j = 0; j < clientList.size(); j++) {
-							if (clientList.get(j).getUserName().equals(data.getString("username"))) {
-								offLine(j);
+						for(int i = 0; i < clientList.size(); i++) {
+							if (clientList.get(i).getUserName().equals(data.getString("username"))) {
+								offLine(i);
+							}
+						}
+					}else if(data.getString("msg").equals("STATS")) {
+						for(int i=0; i<clientList.size(); i++) {
+							if(clientList.get(i).getUserName().equals(data.getString("username_to"))) {	
+								//转发
+								JSONObject stats_msg = new JSONObject();
+								stats_msg.put("username_to", data.get("username_to"));
+								stats_msg.put("username_from", data.get("username_from"));
+								stats_msg.put("msg", "STATS");
+								//找到被查看的客户端,发送查询指令
+								try {
+									User user = clientList.get(i);
+									output = new DataOutputStream(user.getSocket().getOutputStream());
+									output.writeUTF(stats_msg.toString());
+								} catch (IOException ex1) {
+									System.out.println("STATS error: " + ex1.getMessage());
+								}
+							}
+						}
+					}else {
+						// marks for private chat
+						boolean isPrivate = false;
+
+						// Private chat, the acquired data forward to the designated user
+						for (int i = 0; i < clientList.size(); i++) {
+							//Find a private chat user by comparing user names
+							if (clientList.get(i).getUserName().equals(data.getString("isPrivChat"))) {
+
+								//Handling chat content
+								String msg = data.getString("username") + " send to you," + data.getString("time") + ":\n"+ data.getString("msg");
+
+								//Packages the message into JSON format and sends the data to the specified client
+								packMsg(data, i, msg);
+								i++;
+
+								//Mark the private chat to end the message sending process
+								isPrivate = true;
+								break;
+							}
+						}
+
+						//group chat
+						//Forward the acquired data to each user
+						if (isPrivate == false) {
+							for (int i = 0; i < clientList.size();) {
+								//The chat information and user list are packaged into JSON format and sent to each client
+								String msg = data.getString("username") + " " + data.getString("time") + ":\n" + data.getString("msg");
+								packMsg(data, i, msg);
+								i++;
 							}
 						}
 					}
-					
-					// marks for private chat
-					boolean isPrivate = false;
-
-					// Private chat, the acquired data forward to the designated user
-					for (int i = 0; i < clientList.size(); i++) {
-						//Find a private chat user by comparing user names
-						if (clientList.get(i).getUserName().equals(data.getString("isPrivChat"))) {
-
-							//Handling chat content
-							String msg = data.getString("username") + " send private to you," + data.getString("time") + ":\n"+ data.getString("msg");
-
-							//Packages the message into JSON format and sends the data to the specified client
-							packMsg(data, i, msg);
-							i++;
-
-							//Mark the private chat to end the message sending process
-							isPrivate = true;
-							break;
-						}
-					}
-
-					//group chat
-					//Forward the acquired data to each user
-					if (isPrivate == false) {
-						for (int i = 0; i < clientList.size();) {
-							//The chat information and user list are packaged into JSON format and sent to each client
-							String msg = data.getString("username") + " " + data.getString("time") + ":\n" + data.getString("msg");
-							packMsg(data, i, msg);
-							i++;
-						}
-					}
-
 				}
 			} catch (IOException e) {
 				System.err.println(e);
