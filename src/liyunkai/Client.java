@@ -93,6 +93,7 @@ public class Client extends JFrame {
 		sendMessage.addActionListener(new ButtonListener());
 		
 		setVisible(true);
+        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
  
 		//Package the message into a JSON data format
 		JSONObject data = new JSONObject();
@@ -140,7 +141,6 @@ public class Client extends JFrame {
 						//The message cannot be sent for STOP to prevent triggering the server to exit with an exception
 						JOptionPane.showMessageDialog(null, "The message can't be STOP", "Warning!!!", JOptionPane.ERROR_MESSAGE);
 					}else if(msg.equals("EXIT")) {
-						commen.add("Exit ");
 						//Package the data into JSON format
 						JSONObject data_send = new JSONObject();
 						data_send.put("username", username);
@@ -159,22 +159,23 @@ public class Client extends JFrame {
 							if(msg1[1].equals("STATS")) {
 								commen.add("STATS ");
 								//判断是否为查看指令
-								JSONObject data_send = new JSONObject();
-								data_send.put("username_from", username);
-								data_send.put("msg", msg1[1]);
+								JSONObject state_send = new JSONObject();
+								state_send.put("username_from", username);
+								state_send.put("msg", "ask_STATS");
+								state_send.put("time", time);
 								//set check user name
-								data_send.put("username_to", msg1[0]);
+								state_send.put("username_to", msg1[0]);
 								//Send data to server
-								message_to_Server.writeUTF(data_send.toString());
+								message_to_Server.writeUTF(state_send.toString());
 							}else {
-								commen.add("MESSAGE ");
+								commen.add("Priv_MESSAGE ");
 								//私聊模式
 								//Package the data into JSON format
 								JSONObject data_send = new JSONObject();
 								data_send.put("username", username);
 								data_send.put("msg", msg1[1]);
 								data_send.put("time", time);
-								//Private chat, set isPrivChat to the user name
+								//Private chat, set isPrivChat to the user_get
 								data_send.put("isPrivChat", msg1[0]);
 								//Send data to server
 								message_to_Server.writeUTF(data_send.toString());
@@ -226,16 +227,17 @@ public class Client extends JFrame {
 							showMessage.append(username + ",You've been kicked out\n" + "Client will be close in 5s");
 							Thread.sleep(5000); //Wait for 5 seconds
 							System.exit(EXIT_ON_CLOSE);
-						}else if(mString.equals("STATS")) {
+						}else if(mString.equals("ask_STATS")) {
 							//转发指令列表
 							/**
 							 * @param username: 发出指令列表的用户
 							 * @param isPrivChat: 接受指令的用户
 							 * @param msg: 指令列表
-							 */
+							 */					
 							JSONObject stats_send = new JSONObject();
 							stats_send.put("username", username);
 							stats_send.put("isPrivChat", data.get("username_from"));
+							stats_send.put("time", data.get("time"));
 							stats_send.put("msg", commen);
 							//Send data to server
 							message_to_Server.writeUTF(stats_send.toString());

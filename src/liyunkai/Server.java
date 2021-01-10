@@ -166,22 +166,23 @@ public class Server extends JFrame {
 					String json = inputFromClient.readUTF();
 					JSONObject data = JSONObject.fromObject(json.toString());
 										
-					//Detects whether the client message is EXIT
-					//If is EXIT, the offLine function is executed
 					if(data.getString("msg").equals("EXIT")) {
+						//If is EXIT, the offLine function is executed
 						for(int i = 0; i < clientList.size(); i++) {
 							if (clientList.get(i).getUserName().equals(data.getString("username"))) {
 								offLine(i);
 							}
 						}
-					}else if(data.getString("msg").equals("STATS")) {
+					}else if(data.getString("msg").equals("ask_STATS")) {
+						//STATS
 						for(int i=0; i<clientList.size(); i++) {
 							if(clientList.get(i).getUserName().equals(data.getString("username_to"))) {	
 								//转发
 								JSONObject stats_msg = new JSONObject();
 								stats_msg.put("username_to", data.get("username_to"));
+								stats_msg.put("msg", "ask_STATS");
+								stats_msg.put("time", data.get("time"));
 								stats_msg.put("username_from", data.get("username_from"));
-								stats_msg.put("msg", "STATS");
 								//找到被查看的客户端,发送查询指令
 								try {
 									User user = clientList.get(i);
@@ -202,7 +203,8 @@ public class Server extends JFrame {
 							if (clientList.get(i).getUserName().equals(data.getString("isPrivChat"))) {
 
 								//Handling chat content
-								String msg = data.getString("username") + " send to you," + data.getString("time") + ":\n"+ data.getString("msg");
+								String msg = data.getString("username") + " send to you," + 
+										data.getString("time") + ":\n"+ data.getString("msg");
 
 								//Packages the message into JSON format and sends the data to the specified client
 								packMsg(data, i, msg);
@@ -219,7 +221,8 @@ public class Server extends JFrame {
 						if (isPrivate == false) {
 							for (int i = 0; i < clientList.size();) {
 								//The chat information and user list are packaged into JSON format and sent to each client
-								String msg = data.getString("username") + " " + data.getString("time") + ":\n" + data.getString("msg");
+								String msg = data.getString("username") + " " + data.getString("time") + ":\n" 
+										+ data.getString("msg");
 								packMsg(data, i, msg);
 								i++;
 							}
@@ -319,6 +322,8 @@ public class Server extends JFrame {
 								//Get the user's information
 								User kick_user = clientList.get(i);
 	
+								usernamelist.remove(kick_user.getUserName());
+								
 								//Package the send message that is kicked out
 								JSONObject out = new JSONObject();
 								out.put("userlist", usernamelist);
@@ -336,7 +341,6 @@ public class Server extends JFrame {
 	
 								//Removed from the list
 								clientList.remove(i);
-								usernamelist.remove(kick_user.getUserName());
 	
 								isUsernameOut = true;
 								break;

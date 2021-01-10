@@ -57,7 +57,7 @@ public class Regist extends JFrame {
 		hint_blank1.setIcon(icon);
 		hint_blank1.setVerticalTextPosition(JLabel.BOTTOM); //Place the picture in the middle of the box with the one below
 		hint_blank1.setHorizontalTextPosition(JLabel.CENTER);
-		hint_blank1.setText("Click picture to know about author");
+		hint_blank1.setText("Click picture to know about system");
 		hint_blank1.addMouseListener(new MouseListener() {
 			
 			@Override
@@ -81,10 +81,14 @@ public class Regist extends JFrame {
 			public void mouseClicked(MouseEvent e) {
 				JOptionPane.showMessageDialog(null, "@Author: Li Yunkai\n"
 						+ "@Email: 2049721941@qq.com\n"
-						+ "Welcome to use this demo\n"
-						+ "This is a P2P chat system\n"
-						+ "When the server comes online\n"
-						+ "Users can chat by client\n",
+						+ "Welcome to use this P2P chat system\n"
+						+ "If the server comes online, then chat\n"
+						+ "Enter the message in input text area below\n"
+						+ "If you want send message privatly\n"
+						+ "Just add userId- before message\n"
+						+ "Also you can enter userId-STATS to check the common that the user use\n"
+						+ "If you want exit, then input EXIT\n"
+						+ "Have a nice try!",
 					"ABOUT", JOptionPane.DEFAULT_OPTION);
 			}
 		});
